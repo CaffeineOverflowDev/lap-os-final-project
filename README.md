@@ -1,4 +1,4 @@
-# TP3 – Mini Scanner (version TODO)
+# TP3 – Mini Scanner
 
 ## Objectif
 Compléter le script "tp3_kali_scanner_TODO.py" pour lancer des scans nmap **sur 127.0.0.1 uniquement** et sauvegarder chaque rapport dans "./reports/".

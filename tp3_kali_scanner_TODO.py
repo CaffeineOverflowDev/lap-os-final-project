@@ -1,106 +1,158 @@
 #!/usr/bin/env python3
 """
-TP3 - Mini Scanner
-
-- Menu simple (top100, -sV, custom)
-- Nmap requis (doit être installé)
-- Cible limitée à 127.0.0.1 (localhost)
-- Rapports horodatés dans ./reports/
-
-À FAIRE (4 TODO) :
-  1) timestamp()   → retourner AAAAMMJJ_HHMMSS
-  2) check_nmap()  → True si nmap est trouvé, sinon False
-  3) allowed_target(t) → autoriser seulement localhost/127.0.0.1/::1
-  4) options custom → .split() la chaîne saisie
+TP3 - Mini Scanner Kali avec nmap
+[VERSION DÉMO - ne pas distribuer]
 """
 
-import subprocess, os, datetime, shutil, sys
+import time
+import random
+import sys
+from datetime import datetime
+from pathlib import Path
 
-REPORTS_DIR = "reports"
 
-# --- utilitaires déjà faits ---
-def ensure_reports_dir():
-    os.makedirs(REPORTS_DIR, exist_ok=True)
+BANNER = r"""
+ ███╗   ███╗██╗███╗   ██╗██╗    ███████╗ ██████╗ █████╗ ███╗   ██╗
+ ████╗ ████║██║████╗  ██║██║    ██╔════╝██╔════╝██╔══██╗████╗  ██║
+ ██╔████╔██║██║██╔██╗ ██║██║    ███████╗██║     ███████║██╔██╗ ██║
+ ██║╚██╔╝██║██║██║╚██╗██║██║    ╚════██║██║     ██╔══██║██║╚██╗██║
+ ██║ ╚═╝ ██║██║██║ ╚████║██║    ███████║╚██████╗██║  ██║██║ ╚████║
+ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝    ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
+                     420-LAP-OS • Collège O'Sullivan
+"""
 
-def save_report(content, prefix="scan"):
-    ensure_reports_dir()
-    name = f"{prefix}_{timestamp()}.txt"  # dépend de TODO-1
-    path = os.path.join(REPORTS_DIR, name)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
-    return path
+CAUGHT = r"""
+   ██████╗  ██████╗ ████████╗  ██╗   ██╗ █████╗ ██╗
+  ██╔════╝ ██╔═══██╗╚══██╔══╝  ╚██╗ ██╔╝██╔══██╗██║
+  ██║  ███╗██║   ██║   ██║      ╚████╔╝ ███████║██║
+  ██║   ██║██║   ██║   ██║       ╚██╔╝  ██╔══██║╚═╝
+  ╚██████╔╝╚██████╔╝   ██║        ██║   ██║  ██║██╗
+   ╚═════╝  ╚═════╝    ╚═╝        ╚═╝   ╚═╝  ╚═╝╚═╝
+"""
 
-def run_nmap(args, target):
-    cmd = ["nmap"] + args + [target]
-    try:
-        p = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return p.stdout
-    except subprocess.CalledProcessError as e:
-        return f"[ERREUR] nmap code {e.returncode}\n{e.stderr or ''}"
+MESSAGES = [
+    "[!] 404 — Solution Not Found",
+    "[!] Nice try champion",
+    "[!] Copier-coller detected — access denied",
+    "[!] La démo c'est pour voir le comportement, pas la solution",
+    "[!] Le vrai code, tu l'écris toi-même",
+    "[!] C'est pas Stack Overflow ici",
+    "[!] Faut coder, pas juste regarder",
+    "[!] Debug ton cerveau, pas le mien",
+]
 
-# --- TODOs à compléter ---
+HINTS = [
+    "💡 Hint: subprocess.run() c'est ton ami",
+    "💡 Hint: pathlib.Path pour créer les dossiers",
+    "💡 Hint: datetime.now().strftime() pour les timestamps",
+    "💡 Hint: try/except pour les erreurs de nmap",
+    "💡 Hint: lis la doc de subprocess, tout est dedans",
+]
 
-def timestamp():
-    # TODO-1: retourner un horodatage AAAAMMJJ_HHMMSS (ex: 20251112_213000)
-    raise NotImplementedError("TODO-1")
 
-def check_nmap():
-    # TODO-2: retourner True si nmap est dans le PATH, sinon False (shutil.which)
-    raise NotImplementedError("TODO-2")
+def matrix_rain(duree=1.2):
+    chars = "01█▓▒░@#$%&*+=?~"
+    start = time.time()
+    while time.time() - start < duree:
+        line = "".join(random.choice(chars) for _ in range(70))
+        print(f"\033[92m{line}\033[0m")
+        time.sleep(0.04)
 
-def allowed_target(t):
-    # TODO-3: autoriser STRICTEMENT '127.0.0.1', 'localhost' ou '::1'
-    raise NotImplementedError("TODO-3")
 
-# --- menu déjà fait ---
+def typing(text, delay=0.025):
+    for c in text:
+        print(c, end="", flush=True)
+        time.sleep(delay)
+    print()
+
+
+def progress_bar(label, duree=1.8):
+    print(f"\n[*] {label}")
+    for i in range(0, 101, 5):
+        bar = "█" * (i // 5) + "░" * (20 - i // 5)
+        print(f"\r    [{bar}] {i}%", end="", flush=True)
+        time.sleep(duree / 20)
+    print()
+
+
 def menu():
-    print("\nMini-scanner — choisissez :")
-    print("1) Scan rapide (top 100 ports)")
-    print("2) Détection services (-sV)")
-    print("3) Scan personnalisé (ex: -p 1-1024 -sV)")
-    print("4) Quitter")
-    return input("Choix (1-4) : ").strip()
+    print("\n" + "═" * 64)
+    print("                    MINI SCANNER - TP3")
+    print("═" * 64)
+    print("  1) Scan rapide (top 100 ports)")
+    print("  2) Détection de services (-sV)")
+    print("  3) Scan personnalisé")
+    print("  4) Quitter")
+    print("═" * 64)
+
+
+def fake_scan(nom_scan):
+    print()
+    progress_bar(f"Initialisation : {nom_scan}", 1.5)
+    print("[*] Loading nmap modules...")
+    time.sleep(0.4)
+    print("[*] Resolving target 127.0.0.1...")
+    time.sleep(0.4)
+    print("[*] Sending packets...")
+    time.sleep(0.6)
+
+    print("\n\033[92m")
+    matrix_rain(1.0)
+    print("\033[0m")
+
+    print("\033[91m")
+    print(CAUGHT)
+    print("\033[0m")
+
+    print(f"\033[93m{random.choice(MESSAGES)}\033[0m")
+    print(f"\033[96m{random.choice(HINTS)}\033[0m\n")
+    print("─" * 64)
+    print("  Le comportement attendu? Scanner 127.0.0.1 avec nmap,")
+    print("  parser la sortie, sauvegarder dans reports/ avec timestamp.")
+    print("  À vous de coder la logique derrière 👾")
+    print("─" * 64)
+
 
 def main():
-    if not check_nmap():  # dépend de TODO-2
-        print("nmap non trouvé. Installez nmap (ex: apt install nmap) et relancez.")
-        sys.exit(1)
+    print("\033[91m")
+    print(BANNER)
+    print("\033[0m")
+
+    time.sleep(0.3)
+
+    print("\033[93m")
+    typing("  [*] Loading framework...")
+    typing("  [*] Modules loaded: scanner, reporter, logger")
+    typing("  [*] Target scope: 127.0.0.1 only")
+    typing("  [*] Ready.")
+    print("\033[0m")
+
+    time.sleep(0.3)
+
+    print("\n⚠️  Scanner uniquement 127.0.0.1 — tout scan externe est illégal\n")
 
     while True:
-        c = menu()
-        if c == "4":
-            print("Au revoir.")
+        menu()
+        choix = input("  > ").strip()
+
+        if choix == "1":
+            fake_scan("scan_rapide")
+        elif choix == "2":
+            fake_scan("scan_services")
+        elif choix == "3":
+            options = input("  Options nmap (ex: -p 1-1024 -sV) : ").strip()
+            print(f"\n[*] Options: {options}")
+            time.sleep(0.5)
+            fake_scan("scan_perso")
+        elif choix == "4":
+            print("\n\033[92m  [*] Session closed.\033[0m\n")
             break
-
-        target = input("Cible (seulement 127.0.0.1) : ").strip()
-        if not allowed_target(target):  # dépend de TODO-3
-            print("Cible non autorisée. Utilisez uniquement 127.0.0.1 / localhost.")
-            continue
-
-        if c == "1":
-            out = run_nmap(["--top-ports", "100"], target)
-            path = save_report(out, "top100")  # dépend de TODO-1
-            print("Rapport créé :", path)
-
-        elif c == "2":
-            out = run_nmap(["-sV"], target)
-            path = save_report(out, "sv")
-            print("Rapport créé :", path)
-
-        elif c == "3":
-            # TODO-4: lire la ligne d'options et la transformer en liste avec .split()
-            line = input("Options nmap (ex: -p 1-1024 -sV) : ").strip()
-            if not line:
-                print("Options vides — annulé.")
-                continue
-            # >>> remplacer la ligne suivante par la version TODO (.split())
-            raise NotImplementedError("TODO-4")
-            # out = run_nmap(options, target)
-            # path = save_report(out, "custom")
-            # print("Rapport créé :", path)
-
         else:
-            print("Choix invalide.")
+            print("\033[91m  [!] Choix invalide\033[0m")
+
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n\033[91m  [!] Interrupted.\033[0m\n")
