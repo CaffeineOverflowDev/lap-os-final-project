@@ -1,8 +1,16 @@
-=== git log --oneline --decorate -n 10 ===
-[COLLER ICI]
+d7ca72b feat: implémentation du menu interactif et scans de base
+9061a34 feat: Copie du dossier du projet à compléter
+de7d8ec Initial commit
+d7ca72b Saïd Hamdane Sun Apr 19 20:37:59 2026 -0400 feat: implémentation du menu interactif et scans de base
+README.md
+tp3_kali_scanner_TODO.py
+On branch main
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
 
-=== git show --name-only --pretty=format:"%h %an %ad %s" HEAD ===
-[COLLER ICI]
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   GIT_PROOFS.txt
 
-=== git status ===
-[COLLER ICI]
+no changes added to commit (use "git add" and/or "git commit -a")
